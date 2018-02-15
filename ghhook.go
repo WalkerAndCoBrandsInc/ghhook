@@ -36,7 +36,7 @@ var (
 	// ErrNoGithubEventHeader is return when request header does not contain the
 	// required header.
 	//
-	// Webhook names are sent in the header under 'X-GitHub-Event' by Github.
+	// Event names are sent in the header under 'X-GitHub-Event' by Github.
 	ErrNoGithubEventHeader = errors.New("ERROR: no 'X-GitHub-Event' header")
 )
 
@@ -59,6 +59,9 @@ func EventHandler(event Event, fn InputFn) {
 // DefaultHandler is a Lambda compatible handler that receives
 // APIGatewayProxyRequest, ie Github webhook and calls the InputFn mapped to the
 // event name.
+//
+// If there are multiple InputFn for event, only the last response is returned.
+// However, it stops execution if a InputFn fails.
 func DefaultHandler(r *events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	eventName, ok := r.Headers["X-GitHub-Event"]
 	if !ok {
