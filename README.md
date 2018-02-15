@@ -1,6 +1,6 @@
 # ghhook
 
-ghhook is a Go library that makes working with Github webhooks delivered with AWS APIGateway easier.
+ghhook is a Go library that makes working with Github webhooks. This library assumes the wehooks are delivered via AWS APIGateway.
 
 At its core you register an event name with a function that's run whenever webhook with that event name is received.
 
