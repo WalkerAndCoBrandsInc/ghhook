@@ -27,3 +27,30 @@ DefaultHandler is the start point which receives the webhook and runs the regist
 ```Go
 lambda.Start(ghhook.DefaultHandler)
 ```
+
+## Full Lambda Example:
+
+```Go
+package main
+
+import (
+	"fmt"
+
+	"github.com/WalkerAndCoBrandsInc/ghhook"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/google/go-github/github"
+)
+
+func main() {
+	lambda.Start(ghhook.DefaultHandler)
+
+	ghhook.EventHandler(ghhook.PullRequestEvent, func(e interface{}) (*ghhook.Response, error) {
+		pr, _ := e.(*github.PullRequestEvent)
+
+		return &ghhook.Response{
+			Body:       fmt.Sprintf("%s", *pr.Action),
+			StatusCode: 200,
+		}, nil
+	})
+}
+```
