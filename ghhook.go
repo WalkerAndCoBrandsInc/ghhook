@@ -8,6 +8,9 @@ import (
 	"github.com/google/go-github/github"
 )
 
+// Response is returned by InputFn. It's exactly same as
+// events.APIGatewayProxyResponse, but is required so there's no conflict when
+// the caller of this library also uses the events library.
 type Response struct {
 	StatusCode      int
 	Headers         map[string]string
@@ -15,21 +18,47 @@ type Response struct {
 	IsBase64Encoded bool
 }
 
+// InputFn is the type passed to event handler.
 type InputFn func(interface{}) (*Response, error)
 
 var (
+	// Handlers is global list of the webhook functions mapped to their respective
+	// webhook event names.
 	Handlers = map[Event][]InputFn{}
 
-	ErrorResponseFn   = DefaultErrorResponseFn
+	// ErrorResponseFn is used by DefaultHandler to return error responses.
+	ErrorResponseFn = DefaultErrorResponseFn
+
+	// SuccessResponseFn is used by DefaultHandler to return success responses for
+	// webhooks that don't have a InputFn assocation with them.
 	SuccessResponseFn = DefaultSuccessResponseFn
 
-	ErrNoGithubEventHeader = errors.New("ERROR: no X-GitHub-Event header")
+	// ErrNoGithubEventHeader is return when request header does not contain the
+	// required header.
+	//
+	// Webhook names are sent in the header under 'X-GitHub-Event' by Github.
+	ErrNoGithubEventHeader = errors.New("ERROR: no 'X-GitHub-Event' header")
 )
+
+// EventHandler appends the given InputFn to the given event.
+//
+// Example:
+//	ghhook.EventHandler(ghhook.PullRequestEvent, func(e interface{}) (*ghhook.Response, error) {
+//		pr, _ := e.(*github.PullRequestEvent)
+//
+//		return &ghhook.Response{
+//			Body:       fmt.Sprintf("%s", *pr.Action),
+//			StatusCode: 200,
+//		}, nil
+//	})
 
 func EventHandler(event Event, fn InputFn) {
 	Handlers[event] = append(Handlers[event], fn)
 }
 
+// DefaultHandler is a Lambda compatible handler that receives
+// APIGatewayProxyRequest, ie Github webhook and calls the InputFn mapped to the
+// event name.
 func DefaultHandler(r *events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	eventName, ok := r.Headers["X-GitHub-Event"]
 	if !ok {
