@@ -1,0 +1,68 @@
+{
+	"comment": "",
+	"ignore": "",
+	"package": [
+		{
+			"checksumSHA1": "uhHJYRQuh9RoyTkfw7Hjsf5m9K4=",
+			"origin": "github.com/WalkerAndCoBrandsInc/gh-hooks/vendor/github.com/aws/aws-lambda-go/events",
+			"path": "github.com/aws/aws-lambda-go/events",
+			"revision": "f39b011b8ed7a5285873d484209792d5218dccde",
+			"revisionTime": "2018-02-14T02:02:30Z"
+		},
+		{
+			"checksumSHA1": "cJf6yLlm1mNLLTabMPOeiMQpero=",
+			"path": "github.com/google/go-github/github",
+			"revision": "632a2caf6d3d380753dc7e422748202982ad18a3",
+			"revisionTime": "2018-02-12T18:46:55Z"
+		},
+		{
+			"checksumSHA1": "aDjb3mG2PnOgRgQXVXBxzPNc9I0=",
+			"path": "github.com/google/go-querystring/query",
+			"revision": "53e6ce116135b80d037921a7fdd5138cf32d7a8a",
+			"revisionTime": "2017-01-11T10:11:55Z"
+		},
+		{
+			"checksumSHA1": "3jb3O53tfYrqxzkbXANWY71A1fs=",
+			"path": "github.com/jtolds/gls",
+			"revision": "77f18212c9c7edc9bd6a33d383a7b545ce62f064",
+			"revisionTime": "2017-05-03T22:40:06Z"
+		},
+		{
+			"checksumSHA1": "F/qdcwiFG5T7ngOMcrFXflhrULc=",
+			"path": "github.com/smartystreets/assertions",
+			"revision": "0b37b35ec7434b77e77a4bb29b79677cced992ea",
+			"revisionTime": "2017-09-25T17:21:51Z"
+		},
+		{
+			"checksumSHA1": "Vzb+dEH/LTYbvr8RXHmt6xJHz04=",
+			"path": "github.com/smartystreets/assertions/internal/go-render/render",
+			"revision": "0b37b35ec7434b77e77a4bb29b79677cced992ea",
+			"revisionTime": "2017-09-25T17:21:51Z"
+		},
+		{
+			"checksumSHA1": "r6FauVdOTFnwYQgrKGFuWUbIAJE=",
+			"path": "github.com/smartystreets/assertions/internal/oglematchers",
+			"revision": "0b37b35ec7434b77e77a4bb29b79677cced992ea",
+			"revisionTime": "2017-09-25T17:21:51Z"
+		},
+		{
+			"checksumSHA1": "9OuIQT250/8pBDOB6vDpLE59t/o=",
+			"path": "github.com/smartystreets/goconvey/convey",
+			"revision": "e5b2b7c9111590d019a696c7800593f666e1a7f4",
+			"revisionTime": "2017-08-25T22:14:26Z"
+		},
+		{
+			"checksumSHA1": "2x3M0H7g69Yul0dydYqLklCFDDA=",
+			"path": "github.com/smartystreets/goconvey/convey/gotest",
+			"revision": "e5b2b7c9111590d019a696c7800593f666e1a7f4",
+			"revisionTime": "2017-08-25T22:14:26Z"
+		},
+		{
+			"checksumSHA1": "/Vf/BK8DEzagv141VuY7P1UtI40=",
+			"path": "github.com/smartystreets/goconvey/convey/reporting",
+			"revision": "e5b2b7c9111590d019a696c7800593f666e1a7f4",
+			"revisionTime": "2017-08-25T22:14:26Z"
+		}
+	],
+	"rootPath": "github.com/WalkerAndCoBrandsInc/ghhook"
+}
