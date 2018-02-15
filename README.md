@@ -1,6 +1,6 @@
 # ghhook
 
-ghhook is a Go library that makes working with Github webhooks delivered with AWS APIGateway easier.
+ghhook is a Go library that makes working with Github webhooks. This library assumes the wehooks are delivered via AWS APIGateway.
 
 At its core you register an event name with a function that's run whenever webhook with that event name is received.
 
@@ -26,4 +26,31 @@ DefaultHandler is the start point which receives the webhook and runs the regist
 
 ```Go
 lambda.Start(ghhook.DefaultHandler)
+```
+
+## Full Lambda Example:
+
+```Go
+package main
+
+import (
+	"fmt"
+
+	"github.com/WalkerAndCoBrandsInc/ghhook"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/google/go-github/github"
+)
+
+func main() {
+	lambda.Start(ghhook.DefaultHandler)
+
+	ghhook.EventHandler(ghhook.PullRequestEvent, func(e interface{}) (*ghhook.Response, error) {
+		pr, _ := e.(*github.PullRequestEvent)
+
+		return &ghhook.Response{
+			Body:       fmt.Sprintf("%s", *pr.Action),
+			StatusCode: 200,
+		}, nil
+	})
+}
 ```
