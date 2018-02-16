@@ -42,9 +42,7 @@ import (
 )
 
 func main() {
-	lambda.Start(ghhook.DefaultHandler)
-
-	ghhook.EventHandler(ghhook.PullRequestEvent, func(e interface{}) (*ghhook.Response, error) {
+  ghhook.EventHandler(ghhook.PullRequestEvent, func(e interface{}) (*ghhook.Response, error) {
 		pr, _ := e.(*github.PullRequestEvent)
 
 		return &ghhook.Response{
@@ -52,5 +50,8 @@ func main() {
 			StatusCode: 200,
 		}, nil
 	})
+
+  // important, this should be the last line since it blocks
+  lambda.Start(ghhook.DefaultHandler)
 }
 ```
