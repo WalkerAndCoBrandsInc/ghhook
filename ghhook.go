@@ -2,7 +2,7 @@ package ghhook
 
 import (
 	"errors"
-	"log"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/google/go-github/github"
@@ -60,8 +60,9 @@ func EventHandler(event Event, fn InputFn) {
 // APIGatewayProxyRequest, ie Github webhook and calls the InputFn mapped to the
 // event name.
 //
-// If there are multiple InputFn for event, only the last response is returned.
-// However, it stops execution if a InputFn fails.
+// If there are multiple InputFn for event, if all are successful only the last
+// response is returned, but if any of them fails, it stops execution and
+// returns the error.
 func DefaultHandler(r *events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	eventName, ok := r.Headers["X-GitHub-Event"]
 	if !ok {
@@ -70,8 +71,7 @@ func DefaultHandler(r *events.APIGatewayProxyRequest) (*events.APIGatewayProxyRe
 
 	fns, ok := Handlers[Event(eventName)]
 	if !ok {
-		log.Printf("Dropping unregistered event:%s", eventName)
-		return SuccessResponseFn()
+		return SuccessResponseFn(fmt.Sprintf("Dropping unregistered event:%s", eventName))
 	}
 
 	i, err := github.ParseWebHook(eventName, []byte(r.Body))
@@ -97,9 +97,9 @@ func DefaultErrorResponseFn(err error) (*events.APIGatewayProxyResponse, error) 
 	}, nil
 }
 
-func DefaultSuccessResponseFn() (*events.APIGatewayProxyResponse, error) {
+func DefaultSuccessResponseFn(body string) (*events.APIGatewayProxyResponse, error) {
 	return &events.APIGatewayProxyResponse{
-		Body:       "",
+		Body:       body,
 		StatusCode: 200,
 	}, nil
 }
