@@ -104,6 +104,11 @@ func DefaultSuccessResponseFn() (*events.APIGatewayProxyResponse, error) {
 	}, nil
 }
 
+// ResetHandlers is used to clear out the handlers. This is mainly to be used in tests.
+func ResetHandlers() {
+	Handlers = map[Event][]InputFn{}
+}
+
 func convertResponseToEventsResponse(r *Response) *events.APIGatewayProxyResponse {
 	return &events.APIGatewayProxyResponse{
 		StatusCode:      r.StatusCode,

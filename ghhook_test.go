@@ -14,7 +14,7 @@ func TestEventHandler(t *testing.T) {
 	}
 
 	Convey("It saves input fn to event name", t, func() {
-		resetHandlers()
+		Reset(func() { ResetHandlers() })
 
 		EventHandler(PullRequestEvent, fn)
 
@@ -24,7 +24,7 @@ func TestEventHandler(t *testing.T) {
 	})
 
 	Convey("It appends input fn to event name", t, func() {
-		resetHandlers()
+		Reset(func() { ResetHandlers() })
 
 		EventHandler(PullRequestEvent, fn)
 		EventHandler(PullRequestEvent, fn)
@@ -37,7 +37,7 @@ func TestEventHandler(t *testing.T) {
 
 func TestDefaultHandler(t *testing.T) {
 	Convey("It drops unregistered events", t, func() {
-		resetHandlers()
+		Reset(func() { ResetHandlers() })
 
 		resp, err := DefaultHandler(PullRequestProxyRequest)
 		So(err, ShouldBeNil)
@@ -48,7 +48,7 @@ func TestDefaultHandler(t *testing.T) {
 	})
 
 	Convey("It calls registered fn for event", t, func() {
-		resetHandlers()
+		Reset(func() { ResetHandlers() })
 
 		var fn InputFn = func(e interface{}) (*Response, error) {
 			pr, ok := e.(*github.PullRequestEvent)
@@ -69,8 +69,4 @@ func TestDefaultHandler(t *testing.T) {
 		So(resp.StatusCode, ShouldEqual, 200)
 		So(resp.Body, ShouldEqual, "opened")
 	})
-}
-
-func resetHandlers() {
-	Handlers = map[Event][]InputFn{}
 }
