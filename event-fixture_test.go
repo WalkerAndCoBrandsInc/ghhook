@@ -3,42 +3,15 @@ package ghhook
 import "github.com/aws/aws-lambda-go/events"
 
 var (
-	CommitCommentEventProxyRequest = &events.APIGatewayProxyRequest{
-		Headers: map[string]string{"X-GitHub-Event": "pull_request"},
+	CreateEventProxyRequest = &events.APIGatewayProxyRequest{
+		Headers: map[string]string{"X-GitHub-Event": "create"},
 		Body: `
 {
-  "action": "created",
-  "comment": {
-    "url": "https://api.github.com/repos/baxterthehacker/public-repo/comments/11056394",
-    "html_url": "https://github.com/baxterthehacker/public-repo/commit/9049f1265b7d61be4a8904a9a27120d2064dab3b#commitcomment-11056394",
-    "id": 11056394,
-    "user": {
-      "login": "baxterthehacker",
-      "id": 6752317,
-      "avatar_url": "https://avatars.githubusercontent.com/u/6752317?v=3",
-      "gravatar_id": "",
-      "url": "https://api.github.com/users/baxterthehacker",
-      "html_url": "https://github.com/baxterthehacker",
-      "followers_url": "https://api.github.com/users/baxterthehacker/followers",
-      "following_url": "https://api.github.com/users/baxterthehacker/following{/other_user}",
-      "gists_url": "https://api.github.com/users/baxterthehacker/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/baxterthehacker/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/baxterthehacker/subscriptions",
-      "organizations_url": "https://api.github.com/users/baxterthehacker/orgs",
-      "repos_url": "https://api.github.com/users/baxterthehacker/repos",
-      "events_url": "https://api.github.com/users/baxterthehacker/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/baxterthehacker/received_events",
-      "type": "User",
-      "site_admin": false
-    },
-    "position": null,
-    "line": null,
-    "path": null,
-    "commit_id": "9049f1265b7d61be4a8904a9a27120d2064dab3b",
-    "created_at": "2015-05-05T23:40:29Z",
-    "updated_at": "2015-05-05T23:40:29Z",
-    "body": "This is a really good change! :+1:"
-  },
+  "ref": "0.0.1",
+  "ref_type": "tag",
+  "master_branch": "master",
+  "description": "",
+  "pusher_type": "user",
   "repository": {
     "id": 35129377,
     "name": "public-repo",
@@ -103,8 +76,8 @@ var (
     "labels_url": "https://api.github.com/repos/baxterthehacker/public-repo/labels{/name}",
     "releases_url": "https://api.github.com/repos/baxterthehacker/public-repo/releases{/id}",
     "created_at": "2015-05-05T23:40:12Z",
-    "updated_at": "2015-05-05T23:40:12Z",
-    "pushed_at": "2015-05-05T23:40:27Z",
+    "updated_at": "2015-05-05T23:40:30Z",
+    "pushed_at": "2015-05-05T23:40:38Z",
     "git_url": "git://github.com/baxterthehacker/public-repo.git",
     "ssh_url": "git@github.com:baxterthehacker/public-repo.git",
     "clone_url": "https://github.com/baxterthehacker/public-repo.git",

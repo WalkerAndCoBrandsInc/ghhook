@@ -66,6 +66,14 @@ func TestDefaultHandler(t *testing.T) {
 			So(resp.Body, ShouldEqual, "Dropping unregistered action: 'opened'")
 		})
 
+		Convey("It returns error if action filter is used with event with no action", func() {
+			EventHandlerActionFilter(CreateEvent, []string{"reopened"}, fn)
+
+			resp, err := DefaultHandler(CreateEventProxyRequest)
+			So(err, ShouldBeNil)
+			So(resp.Body, ShouldEqual, "No 'action' in event body")
+		})
+
 		Convey("It calls registered fn for event", func() {
 			EventHandler(PullRequestEvent, fn)
 
