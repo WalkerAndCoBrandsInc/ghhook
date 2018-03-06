@@ -1,6 +1,7 @@
 package ghhook
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -51,9 +52,44 @@ var (
 //			StatusCode: 200,
 //		}, nil
 //	})
-
 func EventHandler(event Event, fn InputFn) {
 	Handlers[event] = append(Handlers[event], fn)
+}
+
+// EventHandlerActionFilter is similar to EventHandler with addition of checking
+// if 'action' in request matches any of the given actions.
+//
+// Example:
+//  # only listens to 'opened' action.
+//	ghhook.EventHandlerActionFilter(ghhook.PullRequestEvent, []string{"opened"}, func(e interface{}) (*ghhook.Response, error) {
+//	})
+func EventHandlerActionFilter(event Event, actions []string, fn InputFn) {
+	wrappedFn := func(i interface{}) (*Response, error) {
+		b, err := json.Marshal(i)
+		if err != nil {
+			return nil, err
+		}
+
+		var m map[string]interface{}
+		if err := json.Unmarshal(b, &m); err != nil {
+			return nil, err
+		}
+
+		action, ok := m["action"]
+		if !ok {
+			return localSuccessResp(fmt.Sprintf("No 'action' in event body"))
+		}
+
+		for _, a := range actions {
+			if action == a {
+				return fn(i)
+			}
+		}
+
+		return localSuccessResp(fmt.Sprintf("Dropping unregistered action: '%s'", action))
+	}
+
+	Handlers[event] = append(Handlers[event], wrappedFn)
 }
 
 // DefaultHandler is a Lambda compatible handler that receives
@@ -71,7 +107,7 @@ func DefaultHandler(r *events.APIGatewayProxyRequest) (*events.APIGatewayProxyRe
 
 	fns, ok := Handlers[Event(eventName)]
 	if !ok {
-		return SuccessResponseFn(fmt.Sprintf("Dropping unregistered event:%s", eventName))
+		return SuccessResponseFn(fmt.Sprintf("Dropping unregistered event: '%s'", eventName))
 	}
 
 	i, err := github.ParseWebHook(eventName, []byte(r.Body))
@@ -99,6 +135,13 @@ func DefaultErrorResponseFn(err error) (*events.APIGatewayProxyResponse, error) 
 
 func DefaultSuccessResponseFn(body string) (*events.APIGatewayProxyResponse, error) {
 	return &events.APIGatewayProxyResponse{
+		Body:       body,
+		StatusCode: 200,
+	}, nil
+}
+
+func localSuccessResp(body string) (*Response, error) {
+	return &Response{
 		Body:       body,
 		StatusCode: 200,
 	}, nil

@@ -39,6 +39,16 @@ func TestDefaultHandler(t *testing.T) {
 	Convey("DefaultHandler", t, func() {
 		Reset(func() { ResetHandlers() })
 
+		var fn InputFn = func(e interface{}) (*Response, error) {
+			pr, ok := e.(*github.PullRequestEvent)
+			So(ok, ShouldBeTrue)
+
+			return &Response{
+				Body:       fmt.Sprintf("%s", *pr.Action),
+				StatusCode: 200,
+			}, nil
+		}
+
 		Convey("It drops unregistered events", func() {
 			resp, err := DefaultHandler(PullRequestProxyRequest)
 			So(err, ShouldBeNil)
@@ -48,18 +58,27 @@ func TestDefaultHandler(t *testing.T) {
 			So(resp.Body, ShouldEqual, "Dropping unregistered event: 'pull_request'")
 		})
 
+		Convey("It drops unregistered actions", func() {
+			EventHandlerActionFilter(PullRequestEvent, []string{"reopened"}, fn)
+
+			resp, err := DefaultHandler(PullRequestProxyRequest)
+			So(err, ShouldBeNil)
+			So(resp.Body, ShouldEqual, "Dropping unregistered action: 'opened'")
+		})
+
 		Convey("It calls registered fn for event", func() {
-			var fn InputFn = func(e interface{}) (*Response, error) {
-				pr, ok := e.(*github.PullRequestEvent)
-				So(ok, ShouldBeTrue)
-
-				return &Response{
-					Body:       fmt.Sprintf("%s", *pr.Action),
-					StatusCode: 200,
-				}, nil
-			}
-
 			EventHandler(PullRequestEvent, fn)
+
+			resp, err := DefaultHandler(PullRequestProxyRequest)
+			So(err, ShouldBeNil)
+
+			So(resp, ShouldNotBeNil)
+			So(resp.StatusCode, ShouldEqual, 200)
+			So(resp.Body, ShouldEqual, "opened")
+		})
+
+		Convey("It calls registered fn for event with action filter", func() {
+			EventHandlerActionFilter(PullRequestEvent, []string{"opened"}, fn)
 
 			resp, err := DefaultHandler(PullRequestProxyRequest)
 			So(err, ShouldBeNil)
