@@ -1,8 +1,9 @@
 package ghhook
 
 import (
+	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/google/go-github/github"
@@ -51,17 +52,53 @@ var (
 //			StatusCode: 200,
 //		}, nil
 //	})
-
 func EventHandler(event Event, fn InputFn) {
 	Handlers[event] = append(Handlers[event], fn)
+}
+
+// EventHandlerActionFilter is similar to EventHandler with addition of checking
+// if 'action' in request matches any of the given actions.
+//
+// Example:
+//  # only listens to 'opened' action.
+//	ghhook.EventHandlerActionFilter(ghhook.PullRequestEvent, []string{"opened"}, func(e interface{}) (*ghhook.Response, error) {
+//	})
+func EventHandlerActionFilter(event Event, actions []string, fn InputFn) {
+	wrappedFn := func(i interface{}) (*Response, error) {
+		b, err := json.Marshal(i)
+		if err != nil {
+			return nil, err
+		}
+
+		var m map[string]interface{}
+		if err := json.Unmarshal(b, &m); err != nil {
+			return nil, err
+		}
+
+		action, ok := m["action"]
+		if !ok {
+			return localSuccessResp(fmt.Sprintf("No 'action' in event body"))
+		}
+
+		for _, a := range actions {
+			if action == a {
+				return fn(i)
+			}
+		}
+
+		return localSuccessResp(fmt.Sprintf("Dropping unregistered action: '%s'", action))
+	}
+
+	Handlers[event] = append(Handlers[event], wrappedFn)
 }
 
 // DefaultHandler is a Lambda compatible handler that receives
 // APIGatewayProxyRequest, ie Github webhook and calls the InputFn mapped to the
 // event name.
 //
-// If there are multiple InputFn for event, only the last response is returned.
-// However, it stops execution if a InputFn fails.
+// If there are multiple InputFn for event, if all are successful only the last
+// response is returned, but if any of them fails, it stops execution and
+// returns the error.
 func DefaultHandler(r *events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	eventName, ok := r.Headers["X-GitHub-Event"]
 	if !ok {
@@ -70,8 +107,7 @@ func DefaultHandler(r *events.APIGatewayProxyRequest) (*events.APIGatewayProxyRe
 
 	fns, ok := Handlers[Event(eventName)]
 	if !ok {
-		log.Printf("Dropping unregistered event:%s", eventName)
-		return SuccessResponseFn()
+		return SuccessResponseFn(fmt.Sprintf("Dropping unregistered event: '%s'", eventName))
 	}
 
 	i, err := github.ParseWebHook(eventName, []byte(r.Body))
@@ -97,11 +133,23 @@ func DefaultErrorResponseFn(err error) (*events.APIGatewayProxyResponse, error) 
 	}, nil
 }
 
-func DefaultSuccessResponseFn() (*events.APIGatewayProxyResponse, error) {
+func DefaultSuccessResponseFn(body string) (*events.APIGatewayProxyResponse, error) {
 	return &events.APIGatewayProxyResponse{
-		Body:       "",
+		Body:       body,
 		StatusCode: 200,
 	}, nil
+}
+
+func localSuccessResp(body string) (*Response, error) {
+	return &Response{
+		Body:       body,
+		StatusCode: 200,
+	}, nil
+}
+
+// ResetHandlers is used to clear out the handlers. This is mainly to be used in tests.
+func ResetHandlers() {
+	Handlers = map[Event][]InputFn{}
 }
 
 func convertResponseToEventsResponse(r *Response) *events.APIGatewayProxyResponse {
