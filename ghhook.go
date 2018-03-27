@@ -61,9 +61,12 @@ func EventHandler(event Event, fn InputFn) {
 //
 // Example:
 //  # only listens to 'opened' action.
-//	ghhook.EventHandlerActionFilter(ghhook.PullRequestEvent, []string{"opened"}, func(e interface{}) (*ghhook.Response, error) {
-//	})
-func EventHandlerActionFilter(event Event, actions []string, fn InputFn) {
+//	ghhook.EventHandlerActionFilter(
+//	  ghhook.PullRequestEvent,
+//	  map[string][]string{"action": []string{"opened"}},
+//	  func(e interface{}) (*ghhook.Response, error) { return nil, nil },
+//	)
+func EventHandlerActionFilter(event Event, filters map[string][]string, fn InputFn) {
 	wrappedFn := func(i interface{}) (*Response, error) {
 		b, err := json.Marshal(i)
 		if err != nil {
@@ -75,18 +78,20 @@ func EventHandlerActionFilter(event Event, actions []string, fn InputFn) {
 			return nil, err
 		}
 
-		action, ok := m["action"]
-		if !ok {
-			return localSuccessResp(fmt.Sprintf("No 'action' in event body"))
-		}
+		for key, allowedValues := range filters {
+			value, ok := m[key]
+			if !ok {
+				return localSuccessResp(fmt.Sprintf("No key:'%s' in event body", key))
+			}
 
-		for _, a := range actions {
-			if action == a {
-				return fn(i)
+			for _, allowed := range allowedValues {
+				if value == allowed {
+					return fn(i)
+				}
 			}
 		}
 
-		return localSuccessResp(fmt.Sprintf("Dropping unregistered action: '%s'", action))
+		return localSuccessResp(fmt.Sprintf("Dropping unregistered value: '%v'", filters))
 	}
 
 	Handlers[event] = append(Handlers[event], wrappedFn)
