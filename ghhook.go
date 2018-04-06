@@ -57,7 +57,7 @@ func EventHandler(event Event, fn InputFn) {
 }
 
 // EventHandlerActionFilter is similar to EventHandler with addition of checking
-// if 'action' in request matches any of the given actions.
+// if the top level keys match the given filters.
 //
 // Example:
 //  # only listens to 'opened' action.
@@ -92,6 +92,38 @@ func EventHandlerActionFilter(event Event, filters map[string][]string, fn Input
 		}
 
 		return localSuccessResp(fmt.Sprintf("Dropping unregistered value: '%v'", filters))
+	}
+
+	Handlers[event] = append(Handlers[event], wrappedFn)
+}
+
+// EventHandlerFunctionFilter is similar to EventHandler with addition of
+// checking if event matches the given filter function.
+//
+// Example:
+//  # only listens to 'opened' action.
+//	ghhook.EventHandlerFunctionFilter(
+//	  ghhook.PullRequestEvent,
+//    func(e map[string]interface{}) bool { return true },
+//	  func(e interface{}) (*ghhook.Response, error) { return nil, nil },
+//	)
+func EventHandlerFunctionFilter(event Event, filterFn func(map[string]interface{}) bool, fn InputFn) {
+	wrappedFn := func(i interface{}) (*Response, error) {
+		b, err := json.Marshal(i)
+		if err != nil {
+			return nil, err
+		}
+
+		var m map[string]interface{}
+		if err := json.Unmarshal(b, &m); err != nil {
+			return nil, err
+		}
+
+		if !filterFn(m) {
+			return localSuccessResp("Dropping unmatched event for function")
+		}
+
+		return fn(i)
 	}
 
 	Handlers[event] = append(Handlers[event], wrappedFn)
