@@ -59,19 +59,19 @@ func TestDefaultHandler(t *testing.T) {
 		})
 
 		Convey("It drops unregistered actions", func() {
-			EventHandlerActionFilter(PullRequestEvent, []string{"reopened"}, fn)
+			EventHandlerActionFilter(PullRequestEvent, map[string][]string{"action": []string{"reopened"}}, fn)
 
 			resp, err := DefaultHandler(PullRequestProxyRequest)
 			So(err, ShouldBeNil)
-			So(resp.Body, ShouldEqual, "Dropping unregistered action: 'opened'")
+			So(resp.Body, ShouldEqual, "Dropping unregistered value: 'map[action:[reopened]]'")
 		})
 
 		Convey("It returns error if action filter is used with event with no action", func() {
-			EventHandlerActionFilter(CreateEvent, []string{"reopened"}, fn)
+			EventHandlerActionFilter(CreateEvent, map[string][]string{"action": []string{"reopened"}}, fn)
 
 			resp, err := DefaultHandler(CreateEventProxyRequest)
 			So(err, ShouldBeNil)
-			So(resp.Body, ShouldEqual, "No 'action' in event body")
+			So(resp.Body, ShouldEqual, "No key:'action' in event body")
 		})
 
 		Convey("It calls registered fn for event", func() {
@@ -86,7 +86,7 @@ func TestDefaultHandler(t *testing.T) {
 		})
 
 		Convey("It calls registered fn for event with action filter", func() {
-			EventHandlerActionFilter(PullRequestEvent, []string{"opened"}, fn)
+			EventHandlerActionFilter(PullRequestEvent, map[string][]string{"action": []string{"opened"}}, fn)
 
 			resp, err := DefaultHandler(PullRequestProxyRequest)
 			So(err, ShouldBeNil)
@@ -94,6 +94,36 @@ func TestDefaultHandler(t *testing.T) {
 			So(resp, ShouldNotBeNil)
 			So(resp.StatusCode, ShouldEqual, 200)
 			So(resp.Body, ShouldEqual, "opened")
+		})
+
+		Convey("It calls registered fn for event with filter function", func() {
+			EventHandlerFunctionFilter(
+				PullRequestEvent,
+				func(_ map[string]interface{}) bool { return true },
+				fn,
+			)
+
+			resp, err := DefaultHandler(PullRequestProxyRequest)
+			So(err, ShouldBeNil)
+
+			So(resp, ShouldNotBeNil)
+			So(resp.StatusCode, ShouldEqual, 200)
+			So(resp.Body, ShouldEqual, "opened")
+		})
+
+		Convey("It drops events which don't pass the filter function", func() {
+			EventHandlerFunctionFilter(
+				PullRequestEvent,
+				func(_ map[string]interface{}) bool { return false },
+				fn,
+			)
+
+			resp, err := DefaultHandler(PullRequestProxyRequest)
+			So(err, ShouldBeNil)
+
+			So(resp, ShouldNotBeNil)
+			So(resp.StatusCode, ShouldEqual, 200)
+			So(resp.Body, ShouldEqual, "Dropping unmatched event for function")
 		})
 	})
 }
